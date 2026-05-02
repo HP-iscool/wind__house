@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>아이올로스의 바람의 집</title>
+
+<style>
+body{
+  background: radial-gradient(circle at top,#000 50%,#03030a);
+  color:white;
+  font-family:Segoe UI;
+  text-align:center;
+  margin-top:40px;
+}
+
+h1{
+  letter-spacing:3px;
+  color:#7fd0ff;
+  text-shadow:0 0 10px rgba(110,198,255,0.7),0 0 25px rgba(110,198,255,0.5);
+}
+
+button{
+  padding:10px 16px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(110,198,255,0.5);
+  color:#d8f3ff;
+  cursor:pointer;
+}
+
+button.no{
+  border:1px solid rgba(255,100,100,0.7);
+  color:#ffd6d6;
+}
+
+.controls{
+  margin-top:80px;
+}
+
+#status{position:fixed;top:10px;left:10px;}
+#minimap{position:fixed;top:10px;right:10px;}
+
+.row{display:flex;justify-content:center;}
+.tile{width:18px;height:18px;margin:2px;background:#222;}
+.current{background:#6ec6ff;}
+
+#startScreen{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:radial-gradient(circle at center,#02020a,#000);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:25px;
+  z-index:999;
+}
+
+#startScreen h2{
+  color:#7fd0ff;
+  text-shadow:0 0 10px #7fd0ff;
+}
+
+#nameInput{
+  background:transparent;
+  border:none;
+  border-bottom:2px solid #7fd0ff;
+  color:#fff;
+  padding:10px;
+  font-size:16px;
+  text-align:center;
+  outline:none;
+  width:200px;
+  box-shadow:0 0 10px rgba(127,208,255,0.3);
+}
+
+#nameInput::placeholder{
+  color:#7fd0ff88;
+}
+
+#startScreen button{
+  box-shadow:0 0 15px rgba(127,208,255,0.5);
+}
+
+#pouch{
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:300px;
+  background:#04040c;
+  padding:20px;
+  border-radius:12px;
+  display:none;
+}
+#pouch.show{display:block;}
+
+.gray{
+  color:#aaa;
+  line-height:1.6;
+  white-space:pre-line;
+}
+</style>
+</head>
+
+<body>
+
+<div id="startScreen">
+  <h2>이름을 입력하세요</h2>
+  <input id="nameInput" placeholder="이름 입력...">
+  <button onclick="startGame()">입장</button>
+</div>
+
+<h1>아이올로스의 바람의 집</h1>
+
+<div id="status"></div>
+<div id="minimap"></div>
+<div id="text"></div>
+
+<div class="controls">
+  <button onclick="move(-1)">⬅ 뒤로</button>
+  <button onclick="stay()">⏸ 멈춤</button>
+  <button onclick="move(1)">➡ 앞으로</button>
+</div>
+
+<div id="pouch"></div>
+
+<script>
+
+let playerName="";
+
+function startGame(){
+playerName=document.getElementById("nameInput").value||"손님";
+document.getElementById("startScreen").style.display="none";
+update();
+}
+
+function windLine(){
+
+if(current < 5){
+let arr=[
+"바람소리가 들려요.",
+"바람이 불어와요.",
+"어딘가에서 공기가 흐르고 있어요."
+];
+return arr[Math.random()*arr.length|0];
+}
+
+if(current < 10){
+let arr=[
+"…방금 무슨 소리 들리지 않았나요?",
+"바람이… 말을 섞은 것 같아요.",
+"누군가 부르는 느낌이 들어요."
+];
+return arr[Math.random()*arr.length|0];
+}
+
+let arr=[
+`${playerName}님… 듣고 계세요?`,
+"…여기서 멈추면 안 돼요.",
+`${playerName}님… 계속 보고 있었어요.`
+];
+return arr[Math.random()*arr.length|0];
+}
+
+let rooms=["입구","방1","방2","방3","방4","복도","방5","방6","방7","방8","복도2","방9","방10","방11","출구"];
+
+let roomDesc=[`문이 반쯤 열려 있다.
+안쪽에서 바람이 새어나온다.
+
+들어오지 말았어야 했다는 생각이… 늦게 든다.`,
+`먼지가 쌓인 방.
+누군가 오래 머물렀던 흔적이 있다.
+
+하지만… 발자국은 하나뿐이다.`,
+`벽지가 찢겨 있다.
+그 아래에서 검은 자국이 번져 있다.
+
+바람이 그 틈으로 속삭인다.`,
+`창문은 닫혀 있는데 커튼이 흔들린다.
+
+…바람은 어디서 들어오는 걸까.`,
+`낡은 의자가 하나 놓여 있다.
+
+누군가 방금 일어난 것처럼… 아직 따뜻하다.`,
+`길게 뻗은 복도.
+
+발소리가 늦게 따라온다.`,
+`문이 살짝 열려 있다.
+
+안쪽에서 숨을 죽인 기척이 느껴진다.`,
+`벽에 이름들이 긁혀 있다.
+
+그중 하나가… 방금 늘어난 것 같다.`,
+`천장에서 바람이 내려온다.
+
+아니… 위에서 누가 보고 있는 것 같다.`,
+`거울이 있다.
+
+비친 건… 당신이 아니다.`,
+`또 다른 복도.
+
+이번엔… 끝이 보이지 않는다.`,
+`바닥이 젖어 있다.
+
+물인가… 아니면…`,
+`방 안이 지나치게 조용하다.
+
+귀가 멍해질 정도로.`,
+`문이 여러 개 있다.
+
+하지만 뒤돌아보면… 하나뿐이다.`,
+`출구다.
+
+…정말로 나갈 수 있을까.`];
+
+let current=0;
+let pouchRoom=Math.floor(Math.random()*13)+1;
+
+let hasPouch=false;
+let seenPouch=false;
+let gameEnded=false;
+
+let noBtn=null;
+let hideButtons=false;
+
+const text=document.getElementById("text");
+const pouchUI=document.getElementById("pouch");
+
+function updateStatus(){
+document.getElementById("status").innerHTML=`🧳 ${hasPouch?"있음":"없음"}`;
+}
+
+function drawMap(){
+let map=[[0,1,2,3,4],[9,8,7,6,5],[10,11,12,13,14]];
+let html="";
+map.forEach(r=>{
+html+="<div class='row'>";
+r.forEach(c=>{
+html+=`<div class='tile ${c===current?"current":""}'></div>`;
+});
+html+="</div>";
+});
+document.getElementById("minimap").innerHTML=html;
+}
+
+function update(){
+if(gameEnded) return;
+
+updateStatus();
+drawMap();
+
+text.innerHTML=`📍 ${rooms[current]}<br>
+<div class="gray">${roomDesc[current]}</div><br>
+🌬️ ${windLine()}`;
+
+if(current===pouchRoom && !seenPouch){
+seenPouch=true;
+pouchUI.classList.add("show");
+pouchUI.innerHTML=`
+<p>🧳 낡은 주머니가 있다.</p>
+<button onclick="takePouch()">줍는다</button>
+<button class="no" onclick="leavePouch()">두고 간다</button>
+`;
+}
+}
+
+function spawnOpenButtons(){
+if(gameEnded || hideButtons) return;
+
+for(let i=0;i<4;i++){
+addOpenButton();
+addFakeNoButton();
+}
+
+createNoButton();
+}
+
+function addOpenButton(){
+let btn=document.createElement("button");
+btn.innerText="열어볼까?";
+btn.style.position="fixed";
+
+let controls = document.querySelector(".controls");
+let rect = controls.getBoundingClientRect();
+
+btn.style.left=Math.random()*90+"%";
+btn.style.top=(rect.bottom + Math.random()*200)+"px";
+
+btn.onclick=()=>{
+if(gameEnded) return;
+endGame("BAD");
+};
+
+document.body.appendChild(btn);
+}
+
+function addFakeNoButton(){
+let btn=document.createElement("button");
+btn.innerText="아니오?";
+btn.className="no";
+btn.style.position="fixed";
+
+let controls = document.querySelector(".controls");
+let rect = controls.getBoundingClientRect();
+
+btn.style.left=Math.random()*90+"%";
+btn.style.top=(rect.bottom + Math.random()*200)+"px";
+
+btn.onclick=()=>{
+endGame("BAD");
+};
+
+document.body.appendChild(btn);
+}
+
+function createNoButton(){
+
+if(!noBtn){
+noBtn=document.createElement("button");
+noBtn.innerText="아니오";
+noBtn.className="no";
+noBtn.style.position="fixed";
+
+noBtn.onclick=()=>{
+hideButtons=true;
+
+// 🔥 버튼 전부 제거 (수정됨)
+document.querySelectorAll("button").forEach(b=>{
+if(
+b.innerText==="열어볼까?" ||
+b.innerText==="아니오?" ||
+b.innerText==="아니오"
+){
+b.remove();
+}
+});
+};
+
+document.body.appendChild(noBtn);
+}
+
+moveNoButton();
+}
+
+function moveNoButton(){
+noBtn.style.left=Math.random()*80+10+"%";
+noBtn.style.top=Math.random()*80+10+"%";
+}
+
+function takePouch(){
+if(gameEnded) return;
+hasPouch=true;
+pouchUI.classList.remove("show");
+spawnOpenButtons();
+update();
+}
+
+function leavePouch(){
+pouchUI.classList.remove("show");
+}
+
+function endGame(type){
+gameEnded=true;
+document.querySelectorAll("button").forEach(b=>b.disabled=true);
+
+if(type==="BAD"){
+text.innerHTML=`<h2>BAD END</h2><p>${playerName}님… 열어버리셨네요.</p>`;
+}else if(type==="TRUE"){
+text.innerHTML=`<h2>TRUE END</h2><p>${playerName}님, 바람을 품고 나가셨습니다.</p>`;
+}else{
+text.innerHTML=`<h2>NORMAL END</h2><p>${playerName}님… 무언가 놓치셨습니다.</p>`;
+}
+}
+
+function move(d){
+if(gameEnded) return;
+
+current+=d;
+if(current<0) current=0;
+if(current>=rooms.length) current=rooms.length-1;
+
+hideButtons=false;
+
+if(hasPouch){
+spawnOpenButtons();
+moveNoButton();
+}
+
+if(current===rooms.length-1){
+if(hasPouch) endGame("TRUE");
+else endGame("NORMAL");
+return;
+}
+
+update();
+}
+
+function stay(){
+if(gameEnded) return;
+
+let win=window.open("","wind","width=300,height=200");
+win.document.body.style.background="#000";
+win.document.body.style.color="#7fd0ff";
+win.document.body.innerHTML=`<p>…${playerName}님</p><p>멈추면… 잡혀요.</p>`;
+}
+
+</script>
+
+</body>
+</html>
