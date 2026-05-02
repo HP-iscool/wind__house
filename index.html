@@ -360,7 +360,7 @@ pouchUI.classList.remove("show");
 }
 
 /* 🔥 수정된 typeWriter */
-function typeWriter(element, html, speed=30){
+function typeWriter(element, html, speed=80){
 element.innerHTML = html;
 
 let target = element.querySelector("p");
@@ -403,7 +403,7 @@ ${playerName}님… 무언가 놓치셨습니다.
 </p>`;
 }
 
-typeWriter(text, content, 120);
+typeWriter(text, content, 80);
 }
 
 function move(d){
