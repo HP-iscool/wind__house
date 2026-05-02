@@ -360,22 +360,47 @@ function leavePouch(){
 pouchUI.classList.remove("show");
 }
 
+function typeWriter(element, html, speed=30){
+  element.innerHTML = "";
+  let i = 0;
+
+  function type(){
+    if(i < html.length){
+      element.innerHTML += html.charAt(i);
+      i++;
+      setTimeout(type, speed);
+    }
+  }
+
+  type();
+}
+  
 function endGame(type){
 gameEnded=true;
 document.querySelectorAll("button").forEach(b=>b.disabled=true);
 
-text.innerHTML=`<h2>BAD END</h2>
-<p>
-${playerName}님... 열어 버리셨네요.<br>
+let content="";
+
+if(type==="BAD"){
+content=`<h2>BAD END</h2><p class="gray">
+${playerName}님... 열어 버리셨네요.
 ${playerName}은 주머니 속에서 불어오는 바람에 실려 어디론가 사라졌습니다...
 </p>`;
-}else if(type==="TRUE"){
-text.innerHTML=`<h2>TRUE END</h2><p>${playerName}님, 바람을 품고 나가셨습니다.</p>`;
-}else{
-text.innerHTML=`<h2>NORMAL END</h2><p>${playerName}님… 무언가 놓치셨습니다.</p>`;
 }
+else if(type==="TRUE"){
+content=`<h2>TRUE END</h2><p class="gray">
+${playerName}님, 바람을 품고 나가셨습니다.
+</p>`;
+}
+else{
+content=`<h2>NORMAL END</h2><p class="gray">
+${playerName}님… 무언가 놓치셨습니다.
+</p>`;
 }
 
+typeWriter(text, content, 25); // 🔥 속도 조절 가능
+}
+  
 function move(d){
 if(gameEnded) return;
 
