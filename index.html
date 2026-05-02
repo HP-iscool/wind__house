@@ -325,7 +325,6 @@ noBtn.style.position="fixed";
 noBtn.onclick=()=>{
 hideButtons=true;
 
-// 🔥 버튼 전부 제거 (수정됨)
 document.querySelectorAll("button").forEach(b=>{
 if(
 b.innerText==="열어볼까?" ||
@@ -360,21 +359,27 @@ function leavePouch(){
 pouchUI.classList.remove("show");
 }
 
+/* 🔥 수정된 typeWriter */
 function typeWriter(element, html, speed=30){
-  element.innerHTML = "";
-  let i = 0;
+element.innerHTML = html;
 
-  function type(){
-    if(i < html.length){
-      element.innerHTML += html.charAt(i);
-      i++;
-      setTimeout(type, speed);
-    }
-  }
+let target = element.querySelector("p");
+let fullText = target.innerText;
 
-  type();
+target.innerText="";
+let i=0;
+
+function type(){
+if(i < fullText.length){
+target.innerText += fullText.charAt(i);
+i++;
+setTimeout(type, speed);
 }
-  
+}
+type();
+}
+
+/* 🔥 수정된 endGame (줄바꿈 유지) */
 function endGame(type){
 gameEnded=true;
 document.querySelectorAll("button").forEach(b=>b.disabled=true);
@@ -398,9 +403,9 @@ ${playerName}님… 무언가 놓치셨습니다.
 </p>`;
 }
 
-typeWriter(text, content, 25); // 🔥 속도 조절 가능
+typeWriter(text, content, 25);
 }
-  
+
 function move(d){
 if(gameEnded) return;
 
