@@ -95,11 +95,21 @@ button.no{
 }
 #pouch.show{display:block;}
 
+/* ✅ 띄어쓰기 문제 해결 핵심 */
 .gray{
   color:#aaa;
   line-height:1.6;
-  white-space:pre-line;
+  white-space:pre-wrap;
 }
+
+/* 🌬️ 바람에 날리는 효과 */
+.wind-fade{
+  transition: all 2.5s ease;
+  opacity: 0;
+  transform: translateX(120px) translateY(-30px);
+  filter: blur(6px);
+}
+
 </style>
 </head>
 
@@ -359,27 +369,35 @@ function leavePouch(){
 pouchUI.classList.remove("show");
 }
 
-/* 🔥 수정된 typeWriter */
-function typeWriter(element, html, speed=80){
+/* 🔥 타이핑 */
+function typeWriter(element, html, speed=45){
 element.innerHTML = html;
 
-let target = element.querySelector("p");
-let fullText = target.innerText;
+let p = element.querySelector("p");
+let fullText = p.innerText;
 
-target.innerText="";
+p.innerText="";
 let i=0;
 
 function type(){
 if(i < fullText.length){
-target.innerText += fullText.charAt(i);
+p.innerText += fullText.charAt(i);
 i++;
 setTimeout(type, speed);
+}else{
+
+// ✅ BAD END만 바람처럼 사라짐
+if(element.innerHTML.includes("BAD END")){
+setTimeout(()=>{
+element.classList.add("wind-fade");
+}, 1200);
+}
+
 }
 }
 type();
 }
 
-/* 🔥 수정된 endGame (줄바꿈 유지) */
 function endGame(type){
 gameEnded=true;
 document.querySelectorAll("button").forEach(b=>b.disabled=true);
@@ -403,7 +421,7 @@ ${playerName}님… 무언가 놓치셨습니다.
 </p>`;
 }
 
-typeWriter(text, content, 80);
+typeWriter(text, content, 45);
 }
 
 function move(d){
